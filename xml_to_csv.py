@@ -1,49 +1,42 @@
-from xml.sax.handler import ContentHandler
-import xml.sax
-
+import xml.etree.ElementTree as ET
+import csv
 
 xml_path = '/data/StackOverflow/Communityposts/data/Posts.xml'
 csv_path = "/data/StackOverflow/Communityposts/data/Posts.csv"
+bunch_size = 1000000
+# csv_path = "Posts.csv"
+# bunch_size = 10
 
 cols = ['Id','PostTypeId','AcceptedAnswerId','ParentId','CreationDate','DeletionDate','Score','ViewCount','Body','OwnerUserId','OwnerDisplayName','LastEditorUserId','LastEditorDisplayName','LastEditDate','LastActivityDate','Title','Tags','AnswerCount','CommentCount','FavoriteCount','ClosedDate','CommunityOwnedDate'
  ,'ContentLicense']
-single_cols = ['Id','PostTypeId','AcceptedAnswerId','ParentId','CreationDate','ViewCount','Body','OwnerUserId', 'LastEditorDisplayName','AnswerCount','CommentCount','FavoriteCount']
-list_cols = ['DeletionDate', 'Score', 'OwnerDisplayName', 'LastEditorUserId', 'LastEditDate', 'LastActivityDate', 'Title', 'Tags', 'ClosedDate', 'CommunityOwnedDate', 'ContentLicense']
+# single_cols = ['Id','PostTypeId','AcceptedAnswerId','ParentId','CreationDate','ViewCount','Body','OwnerUserId', 'LastEditorDisplayName','AnswerCount','CommentCount','FavoriteCount']
+# list_cols = ['DeletionDate', 'Score', 'OwnerDisplayName', 'LastEditorUserId', 'LastEditDate', 'LastActivityDate', 'Title', 'Tags', 'ClosedDate', 'CommunityOwnedDate', 'ContentLicense']
 
+dict_list = []
+with open(xml_path, mode="r") as xml_file, open(csv_path, mode="a") as csv_file:
+    cnt = 0
+    writer = csv.DictWriter(csv_file, fieldnames=cols)
+    writer.writeheader()
 
-class PostsParser(ContentHandler):
-    def __init__(self, callback=None):
-        self.columns = cols
-        self.current_row = None
-        self.current_index = None
-        self.mapping = {key: i for i, key in enumerate(self.columns)}
-        self.num_columns = len(self.mapping)
-        self.callback = callback
+    for line in xml_file:
+        cnt += 1
+        if (cnt % bunch_size == 0 and cnt != 0):
+            print(cnt, "row")
+            writer.writerows(dict_list)
+            dict_list = []
 
-    def startElement(self, tag, attrs):
-        if tag == 'row':
-            self.current_row = [''] * self.num_columns
-        elif tag in self.mapping:
-            self.current_index = self.mapping[tag]
-        else:
-            self.current_index = None
-    
-    def endElement(self, tag):
-        if tag == 'row':
-            if self.callback is not None:
-                self.callback(self.current_row)
-            else:
-                #  write to csv file
-                # print(self.current_row)
-                pass
-        elif tag in self.mapping:
-            self.current_index = None
-    
-    def characters(self, data):
-        print("get data: " + data)
-        if self.current_index is not None:
-            self.current_row[self.current_index] += data
+        line.strip()
+        try:
+            root = ET.fromstring(line)
+            if root.tag == "row":
+                row_dict = {}
+                for col in cols:
+                    row_dict[col] = root.attrib.get(col)
+                dict_list.append(row_dict)
+        except ET.ParseError:
+            print(line)
 
+    print("Parsing completed.")
+    writer.writerows(dict_list)
+    print("CSV writing completed.")
 
-handler = PostsParser()
-xml.sax.parse(xml_path, handler)

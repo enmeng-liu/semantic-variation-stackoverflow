@@ -80,40 +80,6 @@ df = pd.DataFrame(badges_rows, columns=badges_cols)
 df.reset_index(drop = True, inplace = True)
 df.to_csv('/data/StackOverflow/Communityposts/data/Posts.csv', index = False)
 
-# SAX parser
-# https://stackoverflow.com/questions/59825575/split-large-xml-into-small-chunks
-from xml.sax.handler import ContentHandler
+# https://stackoverflow.com/questions/16669428/process-very-large-20gb-text-file-line-by-line
 
-class StudentReader(ContentHandler):
-    def __init__(self, callback=None):
-        self.column_order = 'ID,NAME,REGNUM,COUNTRY,SHORT_STD_DESC'
-        self.current_student = None
-        self.current_idx = None
-        self.mapping = {key: idx for idx, key in enumerate(self.column_order.split(','))}
-        self.num_cols = len(self.mapping)
-        self.callback = callback
-
-    def startElement(self, tag, attrs):
-        if tag == 'STUDENT':
-            # new student with correct number of columns
-            self.current_student = [''] * self.num_cols
-        elif tag in self.mapping:
-            # which column are we writing to?
-            self.current_idx = self.mapping[tag]
-        else:
-            self.current_idx = None
-
-    def endElement(self, tag):
-        if tag == 'STUDENT':
-            if self.callback is not None:
-                # when we have a callback, call it
-                self.callback(self.current_student)
-            else:
-                # without a callback, just print to console (for debugging)
-                print(self.current_student)
-        elif tag in self.mapping:
-            self.current_idx = None
-
-    def characters(self, data):
-        if self.current_idx is not None:
-            self.current_student[self.current_idx] += data
+'<row Id="4" PostTypeId="1" AcceptedAnswerId="7" CreationDate="2008-07-31T21:42:52.667" Score="709" ViewCount="55543" Body="&lt;p&gt;I want to use a &lt;code&gt;Track-Bar&lt;/code&gt; to change a &lt;code&gt;Form&lt;/code&gt; opacity.&lt;/p&gt;&#xA;&lt;p&gt;This is my code:&lt;/p&gt;&#xA;&lt;pre class=&quot;lang-cs prettyprint-override&quot;&gt;&lt;code&gt;decimal trans = trackBar1.Value / 5000;&#xA;this.Opacity = trans;&#xA;&lt;/code&gt;&lt;/pre&gt;&#xA;&lt;p&gt;When I build the application, it gives the following error:&lt;/p&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;pre class=&quot;lang-none prettyprint-override&quot;&gt;&lt;code&gt;Cannot implicitly convert type decimal to double&#xA;&lt;/code&gt;&lt;/pre&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;p&gt;I have tried using &lt;code&gt;trans&lt;/code&gt; and &lt;code&gt;double&lt;/code&gt;, but then the &lt;code&gt;Control&lt;/code&gt; doesnt work. This code worked fine in a past VB.NET project.&lt;/p&gt;&#xA;" OwnerUserId="8" LastEditorUserId="3072350" LastEditorDisplayName="Rich B" LastEditDate="2021-02-26T03:31:15.027" LastActivityDate="2021-02-26T03:31:15.027" Title="How to convert a Decimal to a Double in C#?" Tags="&lt;c#&gt;&lt;floating-point&gt;&lt;type-conversion&gt;&lt;double&gt;&lt;decimal&gt;" AnswerCount="14" CommentCount="3" FavoriteCount="51" CommunityOwnedDate="2012-10-31T16:42:47.213" ContentLicense="CC BY-SA 4.0" />'
